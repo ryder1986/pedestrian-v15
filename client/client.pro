@@ -3,7 +3,7 @@
 # Project created by QtCreator 2017-09-13T14:16:40
 #
 #-------------------------------------------------
-
+include(../pedestrian.pri)
 QT       += core gui network opengl
 CONFIG +=qml c++11
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
@@ -58,9 +58,14 @@ unix{
 #INCLUDEPATH +=/root/bk/opencv-2-4-9-source/build/__install/include
 #LIBS+=-L/root/bk/opencv-2-4-9-source/build/__install/lib -lopencv_core  -lopencv_highgui  -lopencv_objdetect -lopencv_imgproc -lopencv_ml -lopencv_video
 #LIBS+=-lopencv_core  -lopencv_highgui  -lopencv_objdetect -lopencv_imgproc -lopencv_ml -lopencv_video
-INCLUDEPATH+=/root/sources/opencv-2.4.9/build/__install/include
-LIBS += -L/root/sources/opencv-2.4.9/build/__install/lib  -lopencv_core  -lopencv_highgui  -lopencv_objdetect -lopencv_imgproc -lopencv_ml -lopencv_video
-QMAKE_LFLAGS+="-Wl,--rpath=/root/sources/opencv-2.4.9/build/__install/lib/"
-QMAKE_CXXFLAGS +="-w"
+#INCLUDEPATH+=/root/sources/opencv-2.4.9/build/__install/include
+#LIBS += -L/root/sources/opencv-2.4.9/build/__install/lib  -lopencv_core  -lopencv_highgui  -lopencv_objdetect -lopencv_imgproc -lopencv_ml -lopencv_video
+#QMAKE_LFLAGS+="-Wl,--rpath=/root/sources/opencv-2.4.9/build/__install/lib/"
+#QMAKE_CXXFLAGS +="-w"
+
+INCLUDEPATH +="$$CVPATH/include"
+LIBS+=-L$$CVPATH/lib -lopencv_core -lopencv_highgui -lopencv_objdetect -lopencv_imgproc -lopencv_ml -lopencv_video -lX11
+
+
 }
 DEFINES+=CLIENT
