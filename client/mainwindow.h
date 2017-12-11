@@ -16,7 +16,7 @@
 class ClientCameraManager:public CameraManager{
     Q_OBJECT
 public:
-    ClientCameraManager() :CameraManager("config.json-client")
+    ClientCameraManager() :CameraManager((char *)"config.json-client")
     {
 
     }

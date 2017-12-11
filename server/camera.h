@@ -867,9 +867,10 @@ class VideoHandler{
 
 public:
     IplImage * frame_ori;
-    VideoHandler()
+    string video_path;
+    VideoHandler(string url)
     {
-
+            video_path=url;
     }
     ~VideoHandler()
     {
@@ -895,10 +896,10 @@ public:
         CascadeClassifier cascade;
         vector<Rect> objs;
         //string cascade_name = "../Hog_Adaboost_Pedestrian_Detect\\hogcascade_pedestrians.xml";
-        // string cascade_name = "/root/hogcascade_pedestrians.xml";
+         string cascade_name = "hogcascade_pedestrians.xml";
 
-        const string cascade_name = "hogcascade_pedestrians.xml";
-
+  //      const string cascade_name = "E:\\projects\\repo-github\\reswin32\\hogcascade_pedestrians.xml";
+//E:\projects\repo-github\reswin32\hogcascade_pedestrians.xml
         if (!cascade.load(cascade_name))
         {
             prt(info,"can't load cascade");
@@ -920,10 +921,12 @@ public:
             // int test=  waitKey(1);
             //     printf("%d\n",test);
             Mat frame(*frame_mat);
+//#ifdef DISPLAY_VIDEO
 
-            imshow("url",frame);
-         // waitKey(2);
-            this_thread::sleep_for(chrono::milliseconds(100));
+//            imshow(video_path,frame);
+//         waitKey(2);
+//#endif
+         //   this_thread::sleep_for(chrono::milliseconds(100));
             //  cv::namedWindow("1111")
 //            if(!frame.empty())
 //                imshow("url",frame);
@@ -987,7 +990,7 @@ public:
                             rst_ba.append(",");
                             rst_ba.append(y_str.toStdString().data());
                             //prt(info,"%d %d",rct.x,rct.y);
-
+                            prt(info,"%d",rct.x);
                             ret=true;
                             break;//TODO, now we get first one
                         }
@@ -1008,6 +1011,12 @@ public:
                     //   imshow("result", frame);
                     //outputVideo << frame;
                     //   waitKey(1);
+
+#ifdef DISPLAY_VIDEO
+
+            imshow(video_path,frame);
+         waitKey(2);
+#endif
                     objs.clear();
                 }
             }
@@ -1057,15 +1066,17 @@ public:
     data_t d;
     Camera( camera_config config)
     {
+        d.quit_flag=false;
+        d.duration=100;
         d.testflg=12;
         d.p_lock=new mutex();
-        d.p_src=new VideoSrc(QString("/root/video/test.264"));
-        d.p_handler=new VideoHandler();
+        d.p_src=new VideoSrc(config.ip);
+        string tmp(config.ip.toStdString());
+        d.p_handler=new VideoHandler(tmp);
         d.video_src_thread=new thread(get_frame,&d);
         d.record_thread=new thread(record_fun,&d);
         d.video_sink_thread=new thread(process_frame,&d);
-        d.quit_flag=false;
-        d.duration=100;
+
     }
     ~Camera()
     {
@@ -1122,15 +1133,18 @@ private:
 
     static void get_frame(data_t *data)
     {
+
         while(!data->quit_flag){
+            //    prt(info,"get frame start ");
             data->p_lock->lock();
-              prt(info,"get frame ");
+
             data->frame_list.push_back(*data->p_src->get_frame());
 
 //            data->p_handler->set_frame(&(*data->frame_list.begin()));
 //            data->p_handler->work();
 
             data->p_lock->unlock();
+         //       prt(info,"get frame end ");
             this_thread::sleep_for(chrono::milliseconds(data->duration));
         }
     }
@@ -1140,10 +1154,13 @@ private:
         while(!data->quit_flag){
             data->p_lock->lock();
             if(data->frame_list.size()>0){
-            prt(info,"size : %d",data->frame_list.size());
+          //  prt(info,"size : %d",data->frame_list.size());
                 data->p_handler->set_frame(&(*data->frame_list.begin()));
                 data->p_handler->work();
                 data->frame_list.pop_front();
+            }
+            else{
+             //    prt(info,"size : %d",data->frame_list.size());
             }
             data->p_lock->unlock();
             this_thread::sleep_for(chrono::milliseconds(data->duration));
@@ -1152,17 +1169,23 @@ private:
     }
 
 };
+#ifdef DISPLAY_VIDEO
 #ifdef IS_UNIX
 #include <X11/Xlib.h>
 #endif
+#endif
+
 class CameraManager{
 
 public:
     CameraManager()
     {
-        #ifdef IS_UNIX
-        XInitThreads();
-            #endif
+#ifdef DISPLAY_VIDEO
+#ifdef IS_UNIX
+       XInitThreads();
+#endif
+#endif
+
         p_cfg=new CameraConfiguration("config.json-server");
         start_all();
     }

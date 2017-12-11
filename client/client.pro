@@ -46,13 +46,10 @@ FORMS += \
 
 #QMAKE_LIBDIR+="C:/Users/root/Desktop/opencv-2.4.9/opencv/build/x64/vc12/lib/"
 #DEPENDPATH+="C:/Users/root/Desktop/opencv-2.4.9/opencv/build/x64/vc12/bin/"
+
+INCLUDEPATH +="$$CVPATH/include"
 win32{
-INCLUDEPATH +="C:\Users\root\Desktop\opencv-2.4.9\opencv\build\include"
-LIBS+="C:\Users\root\Desktop\opencv-2.4.9\opencv\build\x64\vc12\lib\opencv_core249.lib"
-LIBS+="C:\Users\root\Desktop\opencv-2.4.9\opencv\build\x64\vc12\lib\opencv_highgui249d.lib"
-LIBS+="C:\Users\root\Desktop\opencv-2.4.9\opencv\build\x64\vc12\lib\opencv_ml249d.lib"
-LIBS+="C:\Users\root\Desktop\opencv-2.4.9\opencv\build\x64\vc12\lib\opencv_video249d.lib"
-LIBS+="C:\Users\root\Desktop\opencv-2.4.9\opencv\build\x64\vc12\lib\opencv_imgproc249d.lib"
+LIBS+=-L$$CVPATH/lib -lopencv_core249 -lopencv_highgui249 -lopencv_objdetect249 -lopencv_imgproc249 -lopencv_ml249 -lopencv_video249
 }
 unix{
 #INCLUDEPATH +=/root/bk/opencv-2-4-9-source/build/__install/include
@@ -63,7 +60,7 @@ unix{
 #QMAKE_LFLAGS+="-Wl,--rpath=/root/sources/opencv-2.4.9/build/__install/lib/"
 #QMAKE_CXXFLAGS +="-w"
 
-INCLUDEPATH +="$$CVPATH/include"
+
 LIBS+=-L$$CVPATH/lib -lopencv_core -lopencv_highgui -lopencv_objdetect -lopencv_imgproc -lopencv_ml -lopencv_video -lX11
 
 

@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
     ServerInfoReporter *reportor=new ServerInfoReporter();
     CameraManager *mgr=new CameraManager();
     reportor->start();
-    this_thread::sleep_for(chrono::seconds(3));
+    this_thread::sleep_for(chrono::seconds(30));
     delete mgr;
 #else
     VideoSrc src("test.264");
@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
         mt=src.get_frame();
         han.set_frame(mt);
         han.work();
-
+        this_thread::sleep_for(chrono::milliseconds(10));
     }
 #endif
  //   Timer t(test_fun,100);

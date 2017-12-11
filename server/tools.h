@@ -28,8 +28,9 @@ class Tools
 public:
     enum FIXED_VALUE{
         PATH_LENGTH=200,
-        BUF_LENGTH=200
-    };
+        BUF_LENGTH=200,
+        BUF_MAX_LENGTH=2000
+      };
     static mutex lock;
 private:
     int cc=0;
@@ -87,6 +88,15 @@ public:
 #define THREAD_DEF(cls,fun) new thread(std::mem_fn(&cls::fun),*(cls*)this);
 
 
+/*
+
+head defination:
+
+    /    head  /   /  body   /
+    -- -- -- --    ---.......
+    byte1-2:data body length,byte 3-4:protocol version, byte 5-6:operation,byte 7-8:reply rst,9->:body
+
+*/
 
 class Protocol{
 public :
