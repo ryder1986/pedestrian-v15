@@ -907,6 +907,8 @@ public:
         }
 #if 1
 
+
+
         // while (1)
         {
             //   frame_ori = cvQueryFrame(p_cap);
@@ -918,10 +920,16 @@ public:
             // int test=  waitKey(1);
             //     printf("%d\n",test);
             Mat frame(*frame_mat);
+
+            imshow("url",frame);
+         // waitKey(2);
+            this_thread::sleep_for(chrono::milliseconds(100));
             //  cv::namedWindow("1111")
-            if(!frame.empty())
-                imshow("url",frame);
-            //     waitKey(2000);
+//            if(!frame.empty())
+//                imshow("url",frame);
+//                 waitKey(20);
+ //             imwrite("test.yuv", frame);
+
             //  return true;
             //     waitKey(25);
             //    QThread::msleep(1);
@@ -1116,8 +1124,12 @@ private:
     {
         while(!data->quit_flag){
             data->p_lock->lock();
+              prt(info,"get frame ");
             data->frame_list.push_back(*data->p_src->get_frame());
-            //prt(info,"get frame ");
+
+//            data->p_handler->set_frame(&(*data->frame_list.begin()));
+//            data->p_handler->work();
+
             data->p_lock->unlock();
             this_thread::sleep_for(chrono::milliseconds(data->duration));
         }
@@ -1128,7 +1140,7 @@ private:
         while(!data->quit_flag){
             data->p_lock->lock();
             if(data->frame_list.size()>0){
-       //         prt(info,"size : %d",data->frame_list.size());
+            prt(info,"size : %d",data->frame_list.size());
                 data->p_handler->set_frame(&(*data->frame_list.begin()));
                 data->p_handler->work();
                 data->frame_list.pop_front();
@@ -1140,15 +1152,17 @@ private:
     }
 
 };
-
+#ifdef IS_UNIX
 #include <X11/Xlib.h>
-
+#endif
 class CameraManager{
 
 public:
     CameraManager()
     {
+        #ifdef IS_UNIX
         XInitThreads();
+            #endif
         p_cfg=new CameraConfiguration("config.json-server");
         start_all();
     }

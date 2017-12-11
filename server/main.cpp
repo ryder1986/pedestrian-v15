@@ -17,15 +17,25 @@ int main(int argc, char *argv[])
      QCoreApplication a(argc, argv);
     prt(info,"start main");
 
-
+#if 1
 
     ServerInfoReporter *reportor=new ServerInfoReporter();
     CameraManager *mgr=new CameraManager();
     reportor->start();
     this_thread::sleep_for(chrono::seconds(3));
     delete mgr;
+#else
+    VideoSrc src("test.264");
+    VideoHandler han;
+    Mat *mt;
+    while(1)
+    {
+        mt=src.get_frame();
+        han.set_frame(mt);
+        han.work();
 
-
+    }
+#endif
  //   Timer t(test_fun,100);
 //    int tmp=123;
 //    Timer t(test_fun1,(void *)&tmp,100);
