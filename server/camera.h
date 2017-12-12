@@ -263,7 +263,7 @@ public:
         connect(timer,SIGNAL(timeout()),this,SLOT(check_client()));//TODO:maybe replace with readReady signal
         udp_skt = new QUdpSocket(this);
         udp_skt->bind(Protocol::SERVER_REPORTER_PORT,QUdpSocket::ShareAddress);
-       // timer->start(1000);
+        // timer->start(1000);
     }
     ~ServerInfoReporter()
     {
@@ -284,6 +284,7 @@ public:
 public  slots:
     void check_client()
     {
+        //   prt(info,"checking client");
         QByteArray client_msg;
         char *msg;
         if(udp_skt->hasPendingDatagrams())
@@ -870,7 +871,7 @@ public:
     string video_path;
     VideoHandler(string url)
     {
-            video_path=url;
+        video_path=url;
     }
     ~VideoHandler()
     {
@@ -896,10 +897,10 @@ public:
         CascadeClassifier cascade;
         vector<Rect> objs;
         //string cascade_name = "../Hog_Adaboost_Pedestrian_Detect\\hogcascade_pedestrians.xml";
-         string cascade_name = "hogcascade_pedestrians.xml";
+        string cascade_name = "hogcascade_pedestrians.xml";
 
-  //      const string cascade_name = "E:\\projects\\repo-github\\reswin32\\hogcascade_pedestrians.xml";
-//E:\projects\repo-github\reswin32\hogcascade_pedestrians.xml
+        //      const string cascade_name = "E:\\projects\\repo-github\\reswin32\\hogcascade_pedestrians.xml";
+        //E:\projects\repo-github\reswin32\hogcascade_pedestrians.xml
         if (!cascade.load(cascade_name))
         {
             prt(info,"can't load cascade");
@@ -921,17 +922,17 @@ public:
             // int test=  waitKey(1);
             //     printf("%d\n",test);
             Mat frame(*frame_mat);
-//#ifdef DISPLAY_VIDEO
+            //#ifdef DISPLAY_VIDEO
 
-//            imshow(video_path,frame);
-//         waitKey(2);
-//#endif
-         //   this_thread::sleep_for(chrono::milliseconds(100));
+            //            imshow(video_path,frame);
+            //         waitKey(2);
+            //#endif
+            //   this_thread::sleep_for(chrono::milliseconds(100));
             //  cv::namedWindow("1111")
-//            if(!frame.empty())
-//                imshow("url",frame);
-//                 waitKey(20);
- //             imwrite("test.yuv", frame);
+            //            if(!frame.empty())
+            //                imshow("url",frame);
+            //                 waitKey(20);
+            //             imwrite("test.yuv", frame);
 
             //  return true;
             //     waitKey(25);
@@ -989,8 +990,8 @@ public:
                             rst_ba.append(x_str.toStdString().data());
                             rst_ba.append(",");
                             rst_ba.append(y_str.toStdString().data());
-                            //prt(info,"%d %d",rct.x,rct.y);
-                            prt(info,"%d",rct.x);
+                            prt(info,"%d %d",rct.x,rct.y);
+                            //               prt(info,"%d",rct.x);
                             ret=true;
                             break;//TODO, now we get first one
                         }
@@ -1014,8 +1015,8 @@ public:
 
 #ifdef DISPLAY_VIDEO
 
-            imshow(video_path,frame);
-         waitKey(2);
+                    imshow(video_path,frame);
+                    waitKey(2);
 #endif
                     objs.clear();
                 }
@@ -1062,12 +1063,18 @@ public:
         mutex *p_lock;
         int testflg;
         int duration;
+        int src_frame;
+        int src_old_frame;
+        int han_frame;
+        int han_old_frame;
+
     }data_t;
     data_t d;
     Camera( camera_config config)
     {
+        d.cfg=config;
         d.quit_flag=false;
-        d.duration=100;
+        d.duration=1;
         d.testflg=12;
         d.p_lock=new mutex();
         d.p_src=new VideoSrc(config.ip);
@@ -1077,6 +1084,10 @@ public:
         d.record_thread=new thread(record_fun,&d);
         d.video_sink_thread=new thread(process_frame,&d);
 
+        d.han_frame=0;
+        d.han_old_frame=0;
+        d.src_frame=0;
+        d.src_old_frame=0;
     }
     ~Camera()
     {
@@ -1093,12 +1104,42 @@ public:
 
     void restart(camera_config new_cfg)
     {
-        //        quit_flag=true;
-        //        video_src_thread->join();
-        //        video_sink_thread->join();
-        //        cfg=new_cfg;
-        //   video_src_thread=THREAD_DEF(Camera,get_frame);
-        //   video_sink_thread=THREAD_DEF(Camera,process_frame);
+
+
+        d.quit_flag=true;
+        d.video_src_thread->join();
+        d.video_sink_thread->join();
+        d.cfg=new_cfg;
+        d.video_src_thread=new thread(get_frame,&d);
+
+        d.video_sink_thread=new thread(process_frame,&d);
+    }
+    void static restart_internal(data_t &d)
+    {
+
+
+                d.quit_flag=true;
+                d.video_src_thread->join();
+                d.video_sink_thread->join();
+
+        d.p_lock->lock();
+            prt(info," locking");
+        delete d.p_src;
+        delete d.p_handler;
+        d.p_src=new VideoSrc(d.cfg.ip);
+        string tmp(d.cfg.ip.toStdString());
+        d.p_handler=new VideoHandler(tmp);
+
+
+
+                d.quit_flag=false;
+                d.video_src_thread=new thread(get_frame,&d);
+                d.video_sink_thread=new thread(process_frame,&d);
+  prt(info," locking end");
+        d.p_lock->unlock();
+   //     this_thread::sleep_for(chrono::seconds(2));
+
+
     }
     int try_restart(camera_config new_cfg)//experinmental
     {
@@ -1124,50 +1165,74 @@ public:
 private:
     static void record_fun(data_t *data)
     {
-        while(!data->quit_flag)
+        while(1)
         {
+            data->src_old_frame= data->src_frame;
+            data->han_old_frame= data->han_frame;
             this_thread::sleep_for(chrono::milliseconds(1000));
-            prt(info,"recording");
+            int frame_src=data->src_frame- data->src_old_frame;
+            int frame_han=data->han_frame- data->han_old_frame;
+            //    prt(info,"get %d frames,process %d frames",frame_src,frame_han);
+            //  if(frame_src==0&&frame_han==0)
+            if(frame_src==0&&frame_han==0)
+            {
+             //   prt(info,"no work ,restarting src");
+             //   restart_internal( *data);
+            }
+
+
+            if(data->src_frame>100){
+                data->src_frame=0;
+                data->han_frame=0;
+                 prt(info,"restarting");
+                 restart_internal( *data);
+            }
+
+
         }
     }
 
     static void get_frame(data_t *data)
     {
-
+        Mat *tmp_mat;
         while(!data->quit_flag){
-            //    prt(info,"get frame start ");
+           //     prt(info," getting");
             data->p_lock->lock();
-
-            data->frame_list.push_back(*data->p_src->get_frame());
-
-//            data->p_handler->set_frame(&(*data->frame_list.begin()));
-//            data->p_handler->work();
-
+            tmp_mat=data->p_src->get_frame();
+            if(tmp_mat){
+                data->frame_list.push_back(*tmp_mat);
+                data->src_frame++;
+            }
+            else{
+                prt(info,"get null frame");
+            }
             data->p_lock->unlock();
-         //       prt(info,"get frame end ");
             this_thread::sleep_for(chrono::milliseconds(data->duration));
+            //    this_thread::sleep_for(chrono::milliseconds(1));
         }
+        prt(info," frame quit");
     }
     static void process_frame(data_t *data)
     {
 
         while(!data->quit_flag){
+        //     prt(info," processing");
             data->p_lock->lock();
             if(data->frame_list.size()>0){
-          //  prt(info,"size : %d",data->frame_list.size());
+                //prt(info,"size : %d",data->frame_list.size());
                 data->p_handler->set_frame(&(*data->frame_list.begin()));
                 data->p_handler->work();
                 data->frame_list.pop_front();
+                data->han_frame++;
             }
             else{
-             //    prt(info,"size : %d",data->frame_list.size());
+                //    prt(info,"size : %d",data->frame_list.size());
             }
             data->p_lock->unlock();
             this_thread::sleep_for(chrono::milliseconds(data->duration));
+            //  this_thread::sleep_for(chrono::milliseconds(1));
         }
-
     }
-
 };
 #ifdef DISPLAY_VIDEO
 #ifdef IS_UNIX
@@ -1182,7 +1247,7 @@ public:
     {
 #ifdef DISPLAY_VIDEO
 #ifdef IS_UNIX
-       XInitThreads();
+        XInitThreads();
 #endif
 #endif
 

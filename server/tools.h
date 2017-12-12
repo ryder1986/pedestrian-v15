@@ -21,7 +21,7 @@
 //};
 
 using namespace std;
-
+#include <iterator>
 class Tools
 {
 
@@ -44,6 +44,30 @@ public:
     Tools()
     {
     }
+    inline static string last_substr(string str,char split_ch)
+    {
+         char tmp[100];
+         memset(tmp,0,100);
+         strcpy(tmp,str.data());
+         char *p=tmp;
+         int total=0;
+         char *p1=p;
+        while(0!=*(++p)){
+          if(*p==split_ch){
+              p1=p+1;
+              total++;
+          }
+        }
+
+            return string(p1);
+
+//           int total=0;
+//           iterator <std::basic_string>it=str.begin();
+//           while(it!=str.end()){
+//               it++;
+//           }
+    }
+
     inline static void prt(const char *buf,const int line_no,const char *func_name,const char *file_name,const char *label,const char *time)
     {
         char buffer[buf_size];
@@ -54,8 +78,13 @@ public:
             ;
         buffer[i]='\0';
 
-        cout<<"("<<buf<<")"<<'['<<line_no<<']'<<'['<<func_name<<']'<<'['<<file_name<<']'<<'['<<buffer<<']'<<'['<<label<<']'<<endl;
+     //   cout<<"("<<buf<<")"<<'['<<line_no<<']'<<'['<<func_name<<']'<<'['<<file_name<<']'<<'['<<buffer<<']'<<'['<<label<<']'<<endl;
+      //  cout<<"("<<buf<<")"<<'['<<line_no<<']'<<'['<<func_name<<']'<<'['<<file_name<<']'<<'['<<buffer<<']'<<'['<<label<<']'<<endl;
 
+
+        string fn(file_name);
+
+        cout<<last_substr(fn,'/').data()<<"(line"<<line_no<<")"<<":"<<buf<<endl;
     }
     inline static char* get_time()
     {

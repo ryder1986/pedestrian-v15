@@ -2,6 +2,7 @@
 #include <QCoreApplication>
 #include "tools.h"
 #include "camera.h"
+#include "server.h"
 void test_fun()
 {
   prt(info,"test_fun running");
@@ -22,8 +23,10 @@ int main(int argc, char *argv[])
     ServerInfoReporter *reportor=new ServerInfoReporter();
     CameraManager *mgr=new CameraManager();
     reportor->start();
-    this_thread::sleep_for(chrono::seconds(30));
-    delete mgr;
+    Server s;
+    s.print_server_info();
+  //  this_thread::sleep_for(chrono::seconds(30));
+ //   delete mgr;
 #else
     VideoSrc src("test.264");
     VideoHandler han;
