@@ -923,9 +923,12 @@ public:
             //     printf("%d\n",test);
             Mat frame(*frame_mat);
             //#ifdef DISPLAY_VIDEO
-
-            //            imshow(video_path,frame);
-            //         waitKey(2);
+#if 0
+                      imshow(video_path,frame);
+                        waitKey(2);
+                      return 1;
+#endif
+            //
             //#endif
             //   this_thread::sleep_for(chrono::milliseconds(100));
             //  cv::namedWindow("1111")
@@ -944,7 +947,7 @@ public:
                 frame_num++;
                 if (frame_num % 100 == 0)
                 {
-                    cout << "Processed " << frame_num << " frames!" << endl;
+                 //   cout << "Processed " << frame_num << " frames!" << endl;
                 }
 
                 //   if (frame_num % 3 == 0)
@@ -990,7 +993,7 @@ public:
                             rst_ba.append(x_str.toStdString().data());
                             rst_ba.append(",");
                             rst_ba.append(y_str.toStdString().data());
-                            prt(info,"%d %d",rct.x,rct.y);
+        //                    prt(info,"%d %d",rct.x,rct.y);
                             //               prt(info,"%d",rct.x);
                             ret=true;
                             break;//TODO, now we get first one
@@ -1075,7 +1078,8 @@ public:
         d.cfg=config;
         d.quit_flag=false;
         d.duration=1;
-        d.testflg=12;
+        d.duration=0;
+         d.testflg=12;
         d.p_lock=new mutex();
         d.p_src=new VideoSrc(config.ip);
         string tmp(config.ip.toStdString());
@@ -1118,12 +1122,12 @@ public:
     {
 
 
-                d.quit_flag=true;
-                d.video_src_thread->join();
-                d.video_sink_thread->join();
+        //        d.quit_flag=true;
+        //        d.video_src_thread->join();
+        //        d.video_sink_thread->join();
 
         d.p_lock->lock();
-            prt(info," locking");
+    //    prt(info," locking");
         delete d.p_src;
         delete d.p_handler;
         d.p_src=new VideoSrc(d.cfg.ip);
@@ -1132,12 +1136,12 @@ public:
 
 
 
-                d.quit_flag=false;
-                d.video_src_thread=new thread(get_frame,&d);
-                d.video_sink_thread=new thread(process_frame,&d);
-  prt(info," locking end");
+        //        d.quit_flag=false;
+        //        d.video_src_thread=new thread(get_frame,&d);
+        //        d.video_sink_thread=new thread(process_frame,&d);
+     //   prt(info," locking end");
         d.p_lock->unlock();
-   //     this_thread::sleep_for(chrono::seconds(2));
+        //     this_thread::sleep_for(chrono::seconds(2));
 
 
     }
@@ -1174,21 +1178,24 @@ private:
             int frame_han=data->han_frame- data->han_old_frame;
             //    prt(info,"get %d frames,process %d frames",frame_src,frame_han);
             //  if(frame_src==0&&frame_han==0)
+#if 1
             if(frame_src==0&&frame_han==0)
             {
-             //   prt(info,"no work ,restarting src");
-             //   restart_internal( *data);
-            }
+                //   prt(info,"no work ,restarting src");
 
+                restart_internal( *data);
+            }
+#endif
+#if 0
 
             if(data->src_frame>100){
                 data->src_frame=0;
                 data->han_frame=0;
-                 prt(info,"restarting");
-                 restart_internal( *data);
+                prt(info,"restarting");
+                restart_internal( *data);
             }
 
-
+#endif
         }
     }
 
@@ -1196,15 +1203,18 @@ private:
     {
         Mat *tmp_mat;
         while(!data->quit_flag){
-           //     prt(info," getting");
+
             data->p_lock->lock();
+       //     prt(info," getting");
             tmp_mat=data->p_src->get_frame();
-            if(tmp_mat){
+         //   prt(info," getting done");
+            if(tmp_mat&&data->frame_list.size()<10){
                 data->frame_list.push_back(*tmp_mat);
                 data->src_frame++;
+
             }
             else{
-                prt(info,"get null frame");
+             //   prt(info,"get null frame");
             }
             data->p_lock->unlock();
             this_thread::sleep_for(chrono::milliseconds(data->duration));
@@ -1216,10 +1226,10 @@ private:
     {
 
         while(!data->quit_flag){
-        //     prt(info," processing");
+            //     prt(info," processing");
             data->p_lock->lock();
             if(data->frame_list.size()>0){
-                //prt(info,"size : %d",data->frame_list.size());
+           //     prt(info,"size : %d",data->frame_list.size());
                 data->p_handler->set_frame(&(*data->frame_list.begin()));
                 data->p_handler->work();
                 data->frame_list.pop_front();
