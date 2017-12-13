@@ -14,7 +14,7 @@
 //#include "common.h"
 //#include "camera.h"
 
-
+class CameraManager;
 class ClientSession:public QObject{
     Q_OBJECT
 public:
@@ -63,26 +63,26 @@ public slots:
         }
     }
 
-    void simple_reply()
-    {
-        QByteArray client_buf=skt->readAll();
+//    void simple_reply()
+//    {
+//        QByteArray client_buf=skt->readAll();
 
 
-        QByteArray block;
-        block.append(client_buf[0]+1);
-        //        QString str("1234567890");
-        //        block.append(str);
-        skt->write(block);
-        //  skt->disconnectFromHost();
-    }
-    void welcom_reply(){
+//        QByteArray block;
+//        block.append(client_buf[0]+1);
+//        //        QString str("1234567890");
+//        //        block.append(str);
+//        skt->write(block);
+//        //  skt->disconnectFromHost();
+//    }
+//    void welcom_reply(){
 
-        QByteArray block;
-        QString str("welcom client ");
-        block.append(str);
-        skt->write(block);
+//        QByteArray block;
+//        QString str("welcom client ");
+//        block.append(str);
+//        skt->write(block);
 
-    }
+//    }
 
     void read_all(){
         // CameraManager *pa=(CameraManager *)pt;
@@ -90,6 +90,12 @@ public slots:
         int writes_num=0;
 
         QByteArray client_buf=skt->readAll();
+        prt(info,"get config");
+        rcv_buf=client_buf.data();
+        CameraManager mgr=CameraManager::GetInstance();
+        int ret_size=mgr.handle_cmd(rcv_buf,send_buf,client_buf.size());
+        writes_num=skt->write(send_buf,ret_size);
+        prt(info,"send %d bytes",writes_num);
         //       int len=client_buf.length();
 //        int ret=0;
 //        int cmd=Protocol::get_operation(client_buf.data());
@@ -152,7 +158,9 @@ signals :
     int get_server_config(char *buf);
     void socket_error(ClientSession *c);
 private:
-    char buf[Tools::BUF_MAX_LENGTH];
+    //char buf[Tools::BUF_MAX_LENGTH];
+    char *rcv_buf;
+    char send_buf[Tools::BUF_MAX_LENGTH];
     QTcpSocket *skt;
     CameraManager *p_manager;
     QUdpSocket *udp_skt; QTimer *timer;
@@ -223,6 +231,9 @@ public slots:
     }
 
 private:
+    char recv_buf[Tools::BUF_MAX_LENGTH];
+    char send_buf[Tools::BUF_MAX_LENGTH];
+   // mutex mtx;
     CameraManager *cam_manager;//manage all cameras
   //  ServerInfoReporter *reporter;//repy query for system info
     QTcpServer *server;//server for reply all clients request ,execute client cmds,like add cam,del cam, reconfigure cam,etc..

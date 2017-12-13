@@ -21,7 +21,9 @@ int main(int argc, char *argv[])
 #if 1
 
     ServerInfoReporter *reportor=new ServerInfoReporter();
-    CameraManager *mgr=new CameraManager();
+   // CameraManager *mgr=new CameraManager();
+
+    CameraManager mgr=CameraManager::GetInstance();
     reportor->start();
     Server s;
     s.print_server_info();

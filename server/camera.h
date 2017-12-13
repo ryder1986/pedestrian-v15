@@ -432,32 +432,6 @@ public:
     {
         delete p_database;
     }
-    //    int add_camera(int index,QString url,int port)
-    //    {
-    //        if(index<0||index > Protocol::camera_max_num)
-    //            return -1;
-    //        camera_config_t cam;
-    //        cam.ip=url;
-    //        cam.port=port;
-    //        cfg.camera.insert(index,cam);
-    //        cfg.camera_amount++;
-    //        save();
-    //        return 0;
-    //    }
-
-    //    int del_camera(int index)
-    //    {
-    //        if(index<0||index > Protocol::camera_max_num)
-    //            return -1;
-    //        cfg.camera.removeAt(index-1);
-    //        cfg.camera_amount--;
-    //        save();
-    //        return 0;
-    //    }
-    //    void mod_camera()
-    //    {
-
-    //    }
     void set_config(QByteArray &ba)
     {
         p_database->set(ba);
@@ -472,6 +446,20 @@ public:
         p_database->set(ba);
         reload_cfg();
     }
+
+    QByteArray get_config()
+    {
+        QByteArray ba=p_database->get();
+        return ba;
+    }
+
+    void del_camera(int index)
+    {
+        cfg.camera_amount--;
+        cfg.camera.removeAt(index-1);
+        save();
+    }
+
     //    camera_config_t get_camera_config(int index)
     //    {
     //        if(index>0&&index<=cfg.camera_amount)
@@ -924,9 +912,9 @@ public:
             Mat frame(*frame_mat);
             //#ifdef DISPLAY_VIDEO
 #if 0
-                      imshow(video_path,frame);
-                        waitKey(2);
-                      return 1;
+            imshow(video_path,frame);
+            waitKey(2);
+            return 1;
 #endif
             //
             //#endif
@@ -947,7 +935,7 @@ public:
                 frame_num++;
                 if (frame_num % 100 == 0)
                 {
-                 //   cout << "Processed " << frame_num << " frames!" << endl;
+                    //   cout << "Processed " << frame_num << " frames!" << endl;
                 }
 
                 //   if (frame_num % 3 == 0)
@@ -993,7 +981,7 @@ public:
                             rst_ba.append(x_str.toStdString().data());
                             rst_ba.append(",");
                             rst_ba.append(y_str.toStdString().data());
-        //                    prt(info,"%d %d",rct.x,rct.y);
+                            //                    prt(info,"%d %d",rct.x,rct.y);
                             //               prt(info,"%d",rct.x);
                             ret=true;
                             break;//TODO, now we get first one
@@ -1079,7 +1067,7 @@ public:
         d.quit_flag=false;
         d.duration=1;
         d.duration=0;
-         d.testflg=12;
+        d.testflg=12;
         d.p_lock=new mutex();
         d.p_src=new VideoSrc(config.ip);
         string tmp(config.ip.toStdString());
@@ -1095,6 +1083,7 @@ public:
     }
     ~Camera()
     {
+        prt(info,"camera destory");
         d.quit_flag=true;
         d.video_sink_thread->join();
         d.video_src_thread->join();
@@ -1127,7 +1116,7 @@ public:
         //        d.video_sink_thread->join();
 
         d.p_lock->lock();
-    //    prt(info," locking");
+        //    prt(info," locking");
         delete d.p_src;
         delete d.p_handler;
         d.p_src=new VideoSrc(d.cfg.ip);
@@ -1139,7 +1128,7 @@ public:
         //        d.quit_flag=false;
         //        d.video_src_thread=new thread(get_frame,&d);
         //        d.video_sink_thread=new thread(process_frame,&d);
-     //   prt(info," locking end");
+        //   prt(info," locking end");
         d.p_lock->unlock();
         //     this_thread::sleep_for(chrono::seconds(2));
 
@@ -1169,19 +1158,19 @@ public:
 private:
     static void record_fun(data_t *data)
     {
-        while(1)
+        while(!data->quit_flag)
         {
             data->src_old_frame= data->src_frame;
             data->han_old_frame= data->han_frame;
             this_thread::sleep_for(chrono::milliseconds(1000));
             int frame_src=data->src_frame- data->src_old_frame;
             int frame_han=data->han_frame- data->han_old_frame;
-            //    prt(info,"get %d frames,process %d frames",frame_src,frame_han);
+           prt(info,"get %d frames,process %d frames",frame_src,frame_han);
             //  if(frame_src==0&&frame_han==0)
 #if 1
             if(frame_src==0&&frame_han==0)
             {
-                //   prt(info,"no work ,restarting src");
+                prt(info,"%s not work ,restarting src",data->p_src->get_url());
 
                 restart_internal( *data);
             }
@@ -1205,16 +1194,16 @@ private:
         while(!data->quit_flag){
 
             data->p_lock->lock();
-       //     prt(info," getting");
+            //     prt(info," getting");
             tmp_mat=data->p_src->get_frame();
-         //   prt(info," getting done");
+            //   prt(info," getting done");
             if(tmp_mat&&data->frame_list.size()<10){
                 data->frame_list.push_back(*tmp_mat);
                 data->src_frame++;
 
             }
             else{
-             //   prt(info,"get null frame");
+                //   prt(info,"get null frame");
             }
             data->p_lock->unlock();
             this_thread::sleep_for(chrono::milliseconds(data->duration));
@@ -1229,7 +1218,7 @@ private:
             //     prt(info," processing");
             data->p_lock->lock();
             if(data->frame_list.size()>0){
-           //     prt(info,"size : %d",data->frame_list.size());
+                //     prt(info,"size : %d",data->frame_list.size());
                 data->p_handler->set_frame(&(*data->frame_list.begin()));
                 data->p_handler->work();
                 data->frame_list.pop_front();
@@ -1253,6 +1242,12 @@ private:
 class CameraManager{
 
 public:
+    static CameraManager &GetInstance()
+    {
+        static CameraManager m;
+        return m;
+    }
+private:
     CameraManager()
     {
 #ifdef DISPLAY_VIDEO
@@ -1264,12 +1259,59 @@ public:
         p_cfg=new CameraConfiguration("config.json-server");
         start_all();
     }
+
+public:
     ~CameraManager()
     {
-        stop_all();
-        delete p_cfg;
+        //        stop_all();
+        //        delete p_cfg;
 
     }
+    int handle_cmd(char *src_buf,char*dst_buf,int size)
+    {
+        prt(info,"handle cmd");
+
+        int client_cmd=Protocol::get_operation(src_buf);
+        int pkg_len=Protocol::get_length(src_buf);
+        int cam_index=Protocol::get_cam_index(src_buf);
+        QByteArray bta;
+        int ret_size=0;
+        switch (client_cmd) {
+        case Protocol::ADD_CAMERA:
+            prt(info,"protocol :adding   cam");
+            bta.clear();
+            bta.append(src_buf+Protocol::HEAD_LENGTH,pkg_len);
+            add_camera(bta.data());
+            memcpy(dst_buf,src_buf,size);
+            ret_size= Protocol::HEAD_LENGTH;
+            break;
+        case Protocol::GET_CONFIG:
+            prt(info,"protocol :send config");
+            memcpy(dst_buf,src_buf,Protocol::HEAD_LENGTH);
+            memcpy(dst_buf+Protocol::HEAD_LENGTH,p_cfg->get_config().data(),p_cfg->get_config().size());
+            ret_size=p_cfg->get_config().size()+Protocol::HEAD_LENGTH;
+            break;
+        case Protocol::DEL_CAMERA:
+            prt(info,"protocol :deleting    cam %d ",cam_index);
+            //                    p_manager->del_camera(cam_index);
+            //                    del_camera();
+            // writes_num=skt->write(buf,ret+Protocol::HEAD_LENGTH);
+            del_camera(cam_index);
+            memcpy(dst_buf,src_buf,Protocol::HEAD_LENGTH);
+            ret_size= Protocol::HEAD_LENGTH;
+            break;
+        case Protocol::MOD_CAMERA:
+            prt(info,"protocol : modify   cam %d ",cam_index);
+
+
+            break;
+        default:
+            break;
+        }
+        return ret_size;
+
+    }
+
     void start_all()
     {
         foreach (CameraConfiguration::camera_config_t tmp, p_cfg->cfg.camera) {
@@ -1289,13 +1331,25 @@ public:
     {
         p_cfg->set_config(cfg_buf);
         Camera *c=new Camera(p_cfg->cfg.camera[p_cfg->cfg.camera_amount-1]);
-        cameras.push_back(c);
+    //    cameras.push_back(c);
+        cameras.append(c);
     }
     void del_camera(const char *cfg_buf,const int index)
     {
         p_cfg->set_config(cfg_buf);
         delete cameras[index-1];
         cameras.removeAt(index-1);
+    }
+    void del_camera(const int index)
+    {
+       // p_cfg->set_config(cfg_buf);
+
+        p_cfg->del_camera(index);
+      Camera *cm=cameras[index-1];
+      prt(info,"delete %s",cm->d.p_src->get_url());
+       delete cm;//////////////////////////TODO
+        cameras.removeAt(index-1);
+        //   delete cm;
     }
     void mod_camera(const char *cfg_buf,const int index)
     {
@@ -1353,123 +1407,6 @@ public:
     }
 
 };
-
-class Test
-{
-    NetServer server;
-    CameraManager *p_cam_manager;
-    //   std::thread *fetch_cmd_thread;
-    //  abc123 aaa;
-    //
-public:
-    //
-    //    Test(const Test&){//this is need by std:move sometimes(ex:keep every  member in class  can be move )
-
-    //    }
-
-    //   explicit
-    Test() {
-
-        ServerInfoReporter *r=new    ServerInfoReporter ;
-        //        Config cfg("/root/repo-github/pedestrian-v12/server/config.json");
-        //        cfg.save_config_to_file(QString("/root/repo-github/pedestrian-v12/server/config.json-test"));
-        p_cam_manager=new CameraManager();
-        //  c.start();
-        //  Camera c;
-        //        fetch_cmd_thread=THREAD_DEF(Test,fetch_cmd);
-
-        //        fetch_cmd_thread->detach();
-        // fetch_cmd_thread=new std::thread(std::mem_fn(&Test::fetch_cmd),*this);
-        //   fetch_cmd_thread=new std::thread(test);
-    }
-    ~Test()
-    {
-        //   delete fetch_cmd_thread;
-        delete p_cam_manager;
-    }
-    void process_net_cmd()
-    {
-        int cmd;
-        char *config_buf;
-        switch(cmd){
-        case Protocol::ADD_CAMERA:
-            p_cam_manager->add_camera(config_buf);
-            break;
-        case Protocol::DEL_CAMERA:
-            p_cam_manager->del_camera(config_buf,1);
-            break;
-        default:break;
-        }
-
-    }
-    void fun111()
-    {
-
-
-
-        //    abcd::test_fun();
-        //Tools::aaaa=4;
-        //        cout<<Tools::BCD<<endl;
-        //        cout<<Tools::sss::ABC<<endl;
-        // Tools::prt_time();
-        //   http://blog.csdn.net/qq_31175231/article/details/77923212
-        //        chrono::milliseconds ms{3};
-
-
-        //        using namespace std::chrono;
-        //        typedef duration<int,std::ratio<60*60*24*356>> days_type;
-        //        time_point<system_clock,days_type> today = time_point_cast<days_type>(system_clock::now());
-        //        std::cout << today.time_since_epoch().count() << " days since epoch" << std::endl;
-
-        //cout<< Tools::FIXED_VALUE::BUF_LENGTH;
-        //   TestThread t;
-        //        TestThread1 t1;
-        //        thread t(std::mem_fn(&TestThread1::fun),t1);
-        //        t.join();
-
-        //        PrintNum p;
-        //        p.start_thread(&p);
-        //        cout<<"ok1"<<endl;
-        //         p.stop_thread();
-
-        //         PrintNum1 p;
-        //         p.start_thread();
-        //         cout<<"ok1"<<endl;
-        //         p.stop_thread();
-
-        //    Thread1 t1;
-
-        //   t1.start_thread();
-        //   t1.stop_thread();
-        //  this_thread::sleep_for(std::chrono::seconds(3)); //休眠三秒
-        //   cout<<"done"<<endl;
-        //   t1.stop_thread();
-
-
-        //    while(1)
-        //        ;
-        //     ThreadTool1 t1;
-        //       t1.start_thread();
-        //    cout<<"ok2"<<endl;
-        // t1.stop_thread();
-
-        //   Tools::init("aa");
-        //  this_thread::sleep_for(std::chrono::seconds(3)); //休眠三秒
-        //   prt(info,"the name is %d %s",11,"FDASFASDF" );
-    }
-private:
-    void fetch_cmd()
-    {
-        while(1)
-        {
-            prt(info,"fecthing cmd");
-            this_thread::sleep_for(chrono::seconds(1));
-        }
-    }
-
-
-};
-
 
 
 
