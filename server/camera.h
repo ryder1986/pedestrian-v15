@@ -16,21 +16,6 @@
 #include "tools.h"
 using namespace std;
 
-//void fun()
-//{
-
-//    try {
-//        throw std::invalid_argument("test  error!");
-//    }
-//    catch (const invalid_argument& ia) {
-//        std::cerr << "Invalid argument: " << ia.what() << '\n';
-//    }
-//}
-//#include <mutex>
-//using namespace std;
-//#include <windows.h>
-
-
 class TestThread{
 
     static void thread_fun1()
@@ -987,8 +972,6 @@ public:
                             break;//TODO, now we get first one
                         }
 
-                        //  rst_ba.append(";");
-                        //  rst_ba.append(rct.x);
                         it++;
                     }
 #if 0
@@ -1097,64 +1080,24 @@ public:
 
     void restart(camera_config new_cfg)
     {
-
-
         d.quit_flag=true;
         d.video_src_thread->join();
         d.video_sink_thread->join();
         d.cfg=new_cfg;
         d.video_src_thread=new thread(get_frame,&d);
-
         d.video_sink_thread=new thread(process_frame,&d);
     }
     void static restart_internal(data_t &d)
     {
-
-
-        //        d.quit_flag=true;
-        //        d.video_src_thread->join();
-        //        d.video_sink_thread->join();
-
         d.p_lock->lock();
-        //    prt(info," locking");
         delete d.p_src;
         delete d.p_handler;
         d.p_src=new VideoSrc(d.cfg.ip);
         string tmp(d.cfg.ip.toStdString());
         d.p_handler=new VideoHandler(tmp);
-
-
-
-        //        d.quit_flag=false;
-        //        d.video_src_thread=new thread(get_frame,&d);
-        //        d.video_sink_thread=new thread(process_frame,&d);
-        //   prt(info," locking end");
         d.p_lock->unlock();
-        //     this_thread::sleep_for(chrono::seconds(2));
-
-
     }
-    int try_restart(camera_config new_cfg)//experinmental
-    {
-        //        quit_flag=true;
-        //        if(video_src_thread->joinable())
-        //            video_src_thread->detach();
-        //        if(video_sink_thread->joinable())
-        //            video_sink_thread->detach();
-        //        cfg=new_cfg;
-        //        this_thread::sleep_for(chrono::seconds(1));
 
-        //        if(quit_flag==true&&quit_flag_src==true&&quit_flag_sink==true){
-        //            quit_flag=false;
-        //            quit_flag_sink=false;
-        //            quit_flag_src=false;
-        //     //       video_src_thread=THREAD_DEF(Camera,get_frame);
-        //      //      video_sink_thread=THREAD_DEF(Camera,process_frame);
-        //            return 0;
-        //        }else{
-        //            return 1;
-        //        }
-    }
 private:
     static void record_fun(data_t *data)
     {
@@ -1165,7 +1108,7 @@ private:
             this_thread::sleep_for(chrono::milliseconds(1000));
             int frame_src=data->src_frame- data->src_old_frame;
             int frame_han=data->han_frame- data->han_old_frame;
-           prt(info,"get %d frames,process %d frames",frame_src,frame_han);
+            prt(info,"get %d frames,process %d frames",frame_src,frame_han);
             //  if(frame_src==0&&frame_han==0)
 #if 1
             if(frame_src==0&&frame_han==0)
@@ -1240,14 +1183,17 @@ private:
 #endif
 
 class CameraManager{
-
+    int test_int;
 public:
+#if 1
     static CameraManager &GetInstance()
     {
         static CameraManager m;
+
         return m;
     }
 private:
+#endif
     CameraManager()
     {
 #ifdef DISPLAY_VIDEO
@@ -1255,12 +1201,20 @@ private:
         XInitThreads();
 #endif
 #endif
-
         p_cfg=new CameraConfiguration("config.json-server");
         start_all();
     }
 
 public:
+    void test()
+    {
+        test_int=123;
+    }
+    void prt_test()
+    {
+        prt(info,"%d",test_int);
+    }
+
     ~CameraManager()
     {
         //        stop_all();
@@ -1270,7 +1224,6 @@ public:
     int handle_cmd(char *src_buf,char*dst_buf,int size)
     {
         prt(info,"handle cmd");
-
         int client_cmd=Protocol::get_operation(src_buf);
         int pkg_len=Protocol::get_length(src_buf);
         int cam_index=Protocol::get_cam_index(src_buf);
@@ -1278,32 +1231,27 @@ public:
         int ret_size=0;
         switch (client_cmd) {
         case Protocol::ADD_CAMERA:
-            prt(info,"protocol :adding   cam");
+
             bta.clear();
             bta.append(src_buf+Protocol::HEAD_LENGTH,pkg_len);
             add_camera(bta.data());
             memcpy(dst_buf,src_buf,size);
             ret_size= Protocol::HEAD_LENGTH;
             break;
-        case Protocol::GET_CONFIG:
-            prt(info,"protocol :send config");
+        case  Protocol::GET_CONFIG:
+
             memcpy(dst_buf,src_buf,Protocol::HEAD_LENGTH);
             memcpy(dst_buf+Protocol::HEAD_LENGTH,p_cfg->get_config().data(),p_cfg->get_config().size());
             ret_size=p_cfg->get_config().size()+Protocol::HEAD_LENGTH;
             break;
         case Protocol::DEL_CAMERA:
             prt(info,"protocol :deleting    cam %d ",cam_index);
-            //                    p_manager->del_camera(cam_index);
-            //                    del_camera();
-            // writes_num=skt->write(buf,ret+Protocol::HEAD_LENGTH);
             del_camera(cam_index);
             memcpy(dst_buf,src_buf,Protocol::HEAD_LENGTH);
             ret_size= Protocol::HEAD_LENGTH;
             break;
         case Protocol::MOD_CAMERA:
             prt(info,"protocol : modify   cam %d ",cam_index);
-
-
             break;
         default:
             break;
@@ -1331,7 +1279,7 @@ public:
     {
         p_cfg->set_config(cfg_buf);
         Camera *c=new Camera(p_cfg->cfg.camera[p_cfg->cfg.camera_amount-1]);
-    //    cameras.push_back(c);
+        //    cameras.push_back(c);
         cameras.append(c);
     }
     void del_camera(const char *cfg_buf,const int index)
@@ -1342,26 +1290,26 @@ public:
     }
     void del_camera(const int index)
     {
-       // p_cfg->set_config(cfg_buf);
+        // p_cfg->set_config(cfg_buf);
 
         p_cfg->del_camera(index);
-      Camera *cm=cameras[index-1];
-      prt(info,"delete %s",cm->d.p_src->get_url());
-       delete cm;//////////////////////////TODO
+        Camera *cm=cameras[index-1];
+        prt(info,"delete %s",cm->d.p_src->get_url());
+        delete cm;//////////////////////////TODO
         cameras.removeAt(index-1);
         //   delete cm;
     }
     void mod_camera(const char *cfg_buf,const int index)
     {
         p_cfg->set_config(cfg_buf);
-        while(true){
-            if(0==cameras[index-1]->try_restart(p_cfg->cfg.camera[p_cfg->cfg.camera_amount-1]))
-                break;
-            else
-            {
-                prt(info,"restarting camera %d",index);
-            }
-        }
+//        while(true){
+//            if(0==cameras[index-1]->try_restart(p_cfg->cfg.camera[p_cfg->cfg.camera_amount-1]))
+//                break;
+//            else
+//            {
+//                prt(info,"restarting camera %d",index);
+//            }
+//        }
     }
 
 private:

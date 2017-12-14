@@ -23,7 +23,7 @@ void MainWindow::on_pushButton_get_config_clicked()
     rst=rst.remove(0,Protocol::HEAD_LENGTH);//TODO:get the ret value
 
     cam_manager->save_config(rst);
-    cam_manager->reconfig_camera(ui->gridLayout_2);
+   // cam_manager->reconfig_camera(ui->gridLayout_2);
 
     ui->lineEdit_get->setText( cam_manager->get_config());
 }
@@ -39,7 +39,7 @@ void MainWindow::on_pushButton_add_clicked()
     int len=Protocol::encode_addcam_request(buf,setting.length());//encode buffer
     memcpy(buf+Protocol::HEAD_LENGTH,setting.data(),setting.length());
     QByteArray rst=client->call_server(buf,len);//talk to server
-    cam_manager->reconfig_camera(ui->gridLayout_2);
+  //  cam_manager->reconfig_camera(ui->gridLayout_2);
 }
 
 
@@ -53,5 +53,5 @@ void MainWindow::on_pushButton_del_clicked()
         Protocol::encode_delcam_request(buf,index.toInt());//encode buffer
         client->call_server(buf,Protocol::HEAD_LENGTH);//talk to server
     }
-     cam_manager->reconfig_camera(ui->gridLayout_2);
+  //   cam_manager->reconfig_camera(ui->gridLayout_2);
 }

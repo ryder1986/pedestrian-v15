@@ -66,7 +66,7 @@ public:
 
         cam_manager=new ClientCameraManager();
         client=new Client();
-        cam_manager->reconfig_camera(ui->gridLayout_2);
+      //  cam_manager->reconfig_camera(ui->gridLayout_2);
 
      //   connect(client,SIGNAL(send_camera_rst(int,QByteArray)),cam_manager,SLOT(set_camera_layout(int,QByteArray)));
         //   connect(cam_manager,SIGNAL(set_overlay(int,QByteArray)),

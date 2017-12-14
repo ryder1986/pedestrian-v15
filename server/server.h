@@ -15,6 +15,7 @@
 //#include "camera.h"
 
 class CameraManager;
+// extern  CameraManager mgr;
 class ClientSession:public QObject{
     Q_OBJECT
 public:
@@ -63,26 +64,26 @@ public slots:
         }
     }
 
-//    void simple_reply()
-//    {
-//        QByteArray client_buf=skt->readAll();
+    //    void simple_reply()
+    //    {
+    //        QByteArray client_buf=skt->readAll();
 
 
-//        QByteArray block;
-//        block.append(client_buf[0]+1);
-//        //        QString str("1234567890");
-//        //        block.append(str);
-//        skt->write(block);
-//        //  skt->disconnectFromHost();
-//    }
-//    void welcom_reply(){
+    //        QByteArray block;
+    //        block.append(client_buf[0]+1);
+    //        //        QString str("1234567890");
+    //        //        block.append(str);
+    //        skt->write(block);
+    //        //  skt->disconnectFromHost();
+    //    }
+    //    void welcom_reply(){
 
-//        QByteArray block;
-//        QString str("welcom client ");
-//        block.append(str);
-//        skt->write(block);
+    //        QByteArray block;
+    //        QString str("welcom client ");
+    //        block.append(str);
+    //        skt->write(block);
 
-//    }
+    //    }
 
     void read_all(){
         // CameraManager *pa=(CameraManager *)pt;
@@ -90,50 +91,50 @@ public slots:
         int writes_num=0;
 
         QByteArray client_buf=skt->readAll();
-        prt(info,"get config");
+        //   prt(info,"get config");
         rcv_buf=client_buf.data();
-        CameraManager mgr=CameraManager::GetInstance();
+        CameraManager &mgr=CameraManager::GetInstance();
         int ret_size=mgr.handle_cmd(rcv_buf,send_buf,client_buf.size());
         writes_num=skt->write(send_buf,ret_size);
         prt(info,"send %d bytes",writes_num);
         //       int len=client_buf.length();
-//        int ret=0;
-//        int cmd=Protocol::get_operation(client_buf.data());
-//        int pkg_len=Protocol::get_length(client_buf.data());
-//        int cam_index=Protocol::get_cam_index(client_buf.data());
-//        memset(buf,0,Tools::BUF_MAX_LENGTH);
-//        QByteArray bta;
-//        switch (cmd) {
-//        case Protocol::ADD_CAMERA:
-//            prt(info,"protocol :adding   cam");
+        //        int ret=0;
+        //        int cmd=Protocol::get_operation(client_buf.data());
+        //        int pkg_len=Protocol::get_length(client_buf.data());
+        //        int cam_index=Protocol::get_cam_index(client_buf.data());
+        //        memset(buf,0,Tools::BUF_MAX_LENGTH);
+        //        QByteArray bta;
+        //        switch (cmd) {
+        //        case Protocol::ADD_CAMERA:
+        //            prt(info,"protocol :adding   cam");
 
-//            bta.clear();
-//            bta.append((char *)client_buf.data()+Protocol::HEAD_LENGTH,pkg_len);
-//            p_manager->add_camera(bta);
-//            writes_num=skt->write(buf,ret+Protocol::HEAD_LENGTH);
+        //            bta.clear();
+        //            bta.append((char *)client_buf.data()+Protocol::HEAD_LENGTH,pkg_len);
+        //            p_manager->add_camera(bta);
+        //            writes_num=skt->write(buf,ret+Protocol::HEAD_LENGTH);
 
-//            //     p_manager->add_camera();
-//            break;
-//        case Protocol::GET_CONFIG:
-//            prt(info,"protocol :send config");
-//#if 1
-////            ret= p_manager->get_config(buf+Protocol::HEAD_LENGTH);
-////            Protocol::encode_configuration_reply(buf,ret,Protocol::RET_SUCCESS);
-////            writes_num=skt->write(buf,ret+Protocol::HEAD_LENGTH);
-//#else
-//            ret= p_manager->get_config(buf);
-//            skt->write(buf,ret);
-//#endif
-//            break;
-//        case Protocol::DEL_CAMERA:
-//            prt(info,"protocol :deling    cam %d ",cam_index);
-//            p_manager->del_camera(cam_index);
-//            writes_num=skt->write(buf,ret+Protocol::HEAD_LENGTH);
+        //            //     p_manager->add_camera();
+        //            break;
+        //        case Protocol::GET_CONFIG:
+        //            prt(info,"protocol :send config");
+        //#if 1
+        ////            ret= p_manager->get_config(buf+Protocol::HEAD_LENGTH);
+        ////            Protocol::encode_configuration_reply(buf,ret,Protocol::RET_SUCCESS);
+        ////            writes_num=skt->write(buf,ret+Protocol::HEAD_LENGTH);
+        //#else
+        //            ret= p_manager->get_config(buf);
+        //            skt->write(buf,ret);
+        //#endif
+        //            break;
+        //        case Protocol::DEL_CAMERA:
+        //            prt(info,"protocol :deling    cam %d ",cam_index);
+        //            p_manager->del_camera(cam_index);
+        //            writes_num=skt->write(buf,ret+Protocol::HEAD_LENGTH);
 
-//            break;
-//        default:
-//            break;
-//        }
+        //            break;
+        //        default:
+        //            break;
+        //        }
 
     }
 
@@ -179,8 +180,8 @@ class Server : public QObject
     Q_OBJECT
 public:
     explicit Server(QObject *parent=0 ):QObject(parent){
-         //cam_manager=new CameraManager((char *)"/root/repo-github/pedestrian-v8/server/config.json");
-    //    reporter=new ServerInfoReporter();
+        //cam_manager=new CameraManager((char *)"/root/repo-github/pedestrian-v8/server/config.json");
+        //    reporter=new ServerInfoReporter();
         bool ret=false;
         server=new QTcpServer();
         ret=server->listen(QHostAddress::Any,Protocol::SERVER_PORT);
@@ -194,7 +195,7 @@ public:
         connect(server, &QTcpServer::newConnection, this, &Server::handle_incomimg_client);
     }
     ~Server(){
-     //   delete reporter;
+        //   delete reporter;
         delete cam_manager;
         delete server;
     }
@@ -214,8 +215,8 @@ public slots:
         ClientSession *client=new ClientSession(skt,this->cam_manager);
         connect(client,SIGNAL(socket_error(ClientSession*)),this,SLOT(delete_client(ClientSession*)));
         clients.append(client);
-//        connect(client,SIGNAL(get_server_config(char *)),cam_manager,SLOT(get_config(char *)));
-//        connect(cam_manager,SIGNAL(output_2_client(QByteArray)),this,SLOT(output_2_client(QByteArray)));
+        //        connect(client,SIGNAL(get_server_config(char *)),cam_manager,SLOT(get_config(char *)));
+        //        connect(cam_manager,SIGNAL(output_2_client(QByteArray)),this,SLOT(output_2_client(QByteArray)));
     }
     void delete_client(ClientSession *c)
     {
@@ -233,9 +234,9 @@ public slots:
 private:
     char recv_buf[Tools::BUF_MAX_LENGTH];
     char send_buf[Tools::BUF_MAX_LENGTH];
-   // mutex mtx;
+    // mutex mtx;
     CameraManager *cam_manager;//manage all cameras
-  //  ServerInfoReporter *reporter;//repy query for system info
+    //  ServerInfoReporter *reporter;//repy query for system info
     QTcpServer *server;//server for reply all clients request ,execute client cmds,like add cam,del cam, reconfigure cam,etc..
     QList <ClientSession *> clients;//client that connected to server
 };
